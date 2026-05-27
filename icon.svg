@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="100" fill="#0f1117"/>
+  <rect x="60" y="60" width="392" height="392" rx="60" fill="#1a1d27"/>
+  <!-- Factory icon -->
+  <rect x="100" y="280" width="80" height="132" fill="#4f8eff"/>
+  <rect x="216" y="220" width="80" height="192" fill="#4f8eff"/>
+  <rect x="332" y="260" width="80" height="152" fill="#4f8eff"/>
+  <!-- Chimney -->
+  <rect x="120" y="180" width="20" height="100" fill="#8891b2"/>
+  <rect x="240" y="140" width="20" height="80" fill="#8891b2"/>
+  <rect x="352" y="160" width="20" height="100" fill="#8891b2"/>
+  <!-- Smoke -->
+  <circle cx="130" cy="165" r="12" fill="#22263a"/>
+  <circle cx="250" cy="125" r="12" fill="#22263a"/>
+  <circle cx="362" cy="145" r="12" fill="#22263a"/>
+  <!-- Ground -->
+  <rect x="80" y="412" width="352" height="8" rx="4" fill="#2e3348"/>
+  <!-- Gold bar total -->
+  <rect x="176" y="100" width="160" height="40" rx="8" fill="#ffd166"/>
+  <rect x="186" y="110" width="140" height="20" rx="4" fill="#f4b942"/>
+</svg>
