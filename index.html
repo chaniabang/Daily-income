@@ -646,11 +646,11 @@ function renderCalendar(){
     </div>
     <div class="sum-card">
       <div class="sum-card-lbl">월 총계</div>
-      <div class="sum-card-val gold">${fmtK(monthTotal)}</div>
+      <div class="sum-card-val gold" style="font-size:11px">${fmtN(monthTotal)}원</div>
     </div>
     <div class="sum-card">
       <div class="sum-card-lbl">일 평균</div>
-      <div class="sum-card-val green">${fmtK(avgDay)}</div>
+      <div class="sum-card-val green" style="font-size:11px">${fmtN(avgDay)}원</div>
     </div>`;
 
   // Calendar
@@ -770,17 +770,8 @@ function loadDateToCalc(dateStr){
     for(let i=0;i<fill;i++) addRow();
     toast('📂 '+dateStr+' 불러옴');
   } else {
-    // 저장 없음 → 전체 제품 수량 0으로 채우기
-    products.forEach(p=>{
-      const id=rowId++;
-      rows.push({id,prodNum:p.num,qty:'0'});
-      const c=document.getElementById('rowsContainer');
-      const div=document.createElement('div');
-      div.className='row-card';
-      div.id=`rc-${id}`;
-      div.innerHTML=buildRowHTML(id,rows.length);
-      c.appendChild(div);
-    });
+    // 저장 없음 → 빈 10줄로 초기화
+    for(let i=0;i<10;i++) addRow();
     toast('📝 '+dateStr+' 새로 작성');
   }
 
