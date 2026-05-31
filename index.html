@@ -368,9 +368,9 @@ input[type=number]{-moz-appearance:textfield}
 <script>
 // ═══ STATE ═══
 const DEFAULT_PRODUCTS = [
-  {num:'50',price:10.5},{num:'60',price:14.6},{num:'70',price:15.3},
-  {num:'72',price:13.6},{num:'80',price:19.7},{num:'82',price:23.85},
-  {num:'90',price:22.9},{num:'92',price:15.5},{num:'95',price:22.9},
+  {num:'50',price:50},{num:'60',price:60},{num:'70',price:70},
+  {num:'72',price:72},{num:'80',price:80},{num:'82',price:82},
+  {num:'90',price:90},{num:'92',price:92},{num:'95',price:95},
 ];
 
 let products = JSON.parse(localStorage.getItem('products') || 'null') || DEFAULT_PRODUCTS;
@@ -387,6 +387,30 @@ let selectedDay = null;
   viewMonth = now.getMonth();
   const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
   document.getElementById('workDate').value = `${y}-${m}-${d}`;
+  document.getElementById('workDate').addEventListener('change', function(){
+    const dateStr = this.value;
+    if(!dateStr) return;
+    const rec = getRecords().find(r=>r.date===dateStr);
+    if(rec){
+      if(!confirm(dateStr+' 저장된 데이터가 있습니다. 불러올까요?')) return;
+      rows=[]; rowId=0;
+      document.getElementById('rowsContainer').innerHTML='';
+      rec.data.forEach(r=>{
+        const id=rowId++;
+        rows.push({id,prodNum:r.prodNum,qty:r.qty});
+        const c=document.getElementById('rowsContainer');
+        const div=document.createElement('div');
+        div.className='row-card filled';
+        div.id=`rc-${id}`;
+        div.innerHTML=buildRowHTML(id,rows.length);
+        c.appendChild(div);
+      });
+      const fill=Math.max(0,5-rows.length);
+      for(let i=0;i<fill;i++) addRow();
+      updateTotal();
+      toast('📂 '+dateStr+' 불러옴');
+    }
+  });
   for(let i=0;i<10;i++) addRow();
   renderPriceList();
   renderCalendar();
@@ -657,25 +681,41 @@ function renderCalendar(){
     el.innerHTML=`<div class="cal-day">${d}</div>`
       +(info?`<div class="cal-amt">${fmtK(info.total)}</div><div class="cal-items">${info.items}품목</div><div class="cal-dot"></div>`:'');
     el.onclick=()=>selectDay(dateStr, info);
+    el.ondblclick=()=>loadDateToCalc(dateStr);
     grid.appendChild(el);
   }
 }
 
 function selectDay(dateStr, info){
   const detail=document.getElementById('dayDetail');
+
+  // 이미 선택된 날짜 다시 클릭 → 닫기
   if(selectedDay===dateStr){
     selectedDay=null;
     detail.classList.remove('open');
     renderCalendar();
     return;
   }
+
   selectedDay=dateStr;
   renderCalendar();
-  if(!info){detail.classList.remove('open');return;}
 
-  // Load full record
   const rec=getRecords().find(r=>r.date===dateStr);
-  if(!rec){detail.classList.remove('open');return;}
+
+  // 저장 데이터 없는 날짜 → 안내 패널
+  if(!rec){
+    detail.innerHTML=`
+      <div class="detail-title">
+        📋 ${dateStr}
+        <button onclick="loadDateToCalc('${dateStr}')" style="background:var(--blue);color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:12px;font-family:'Noto Sans KR',sans-serif;font-weight:700;cursor:pointer">✏️ 계산기로 열기</button>
+      </div>
+      <div style="text-align:center;padding:14px 0;color:var(--muted);font-size:13px">
+        저장된 데이터가 없습니다<br>
+        <span style="font-size:11px;opacity:.7">더블탭하면 계산기로 바로 이동합니다</span>
+      </div>`;
+    detail.classList.add('open');
+    return;
+  }
 
   const total=rec.data.reduce((a,r)=>a+calcAmt(r.prodNum,r.qty),0);
   const rows_html=rec.data.map(r=>{
@@ -692,7 +732,7 @@ function selectDay(dateStr, info){
   detail.innerHTML=`
     <div class="detail-title">
       📋 ${dateStr}
-      <button onclick="loadDateToCalc('${dateStr}')" style="background:var(--blue);color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:12px;font-family:'Noto Sans KR',sans-serif;font-weight:700;cursor:pointer">계산기로 열기</button>
+      <button onclick="loadDateToCalc('${dateStr}')" style="background:var(--blue);color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:12px;font-family:'Noto Sans KR',sans-serif;font-weight:700;cursor:pointer">✏️ 계산기로 열기</button>
     </div>
     <table class="detail-table">
       <thead><tr>
@@ -709,26 +749,43 @@ function selectDay(dateStr, info){
 }
 
 function loadDateToCalc(dateStr){
-  const rec=getRecords().find(r=>r.date===dateStr);
-  if(!rec) return;
   rows=[]; rowId=0;
   document.getElementById('rowsContainer').innerHTML='';
-  document.getElementById('workDate').value=rec.date;
-  rec.data.forEach(r=>{
-    const id=rowId++;
-    rows.push({id,prodNum:r.prodNum,qty:r.qty});
-    const c=document.getElementById('rowsContainer');
-    const div=document.createElement('div');
-    div.className='row-card filled';
-    div.id=`rc-${id}`;
-    div.innerHTML=buildRowHTML(id,rows.length);
-    c.appendChild(div);
-  });
-  const fill=Math.max(0,5-rows.length);
-  for(let i=0;i<fill;i++) addRow();
+  document.getElementById('workDate').value=dateStr;
+
+  const rec=getRecords().find(r=>r.date===dateStr);
+  if(rec){
+    // 저장된 데이터 있음 → 불러오기
+    rec.data.forEach(r=>{
+      const id=rowId++;
+      rows.push({id,prodNum:r.prodNum,qty:r.qty});
+      const c=document.getElementById('rowsContainer');
+      const div=document.createElement('div');
+      div.className='row-card filled';
+      div.id=`rc-${id}`;
+      div.innerHTML=buildRowHTML(id,rows.length);
+      c.appendChild(div);
+    });
+    const fill=Math.max(0,5-rows.length);
+    for(let i=0;i<fill;i++) addRow();
+    toast('📂 '+dateStr+' 불러옴');
+  } else {
+    // 저장 없음 → 전체 제품 수량 0으로 채우기
+    products.forEach(p=>{
+      const id=rowId++;
+      rows.push({id,prodNum:p.num,qty:'0'});
+      const c=document.getElementById('rowsContainer');
+      const div=document.createElement('div');
+      div.className='row-card';
+      div.id=`rc-${id}`;
+      div.innerHTML=buildRowHTML(id,rows.length);
+      c.appendChild(div);
+    });
+    toast('📝 '+dateStr+' 새로 작성');
+  }
+
   updateTotal();
   switchPage('calc');
-  toast('📂 '+dateStr+' 불러옴');
 }
 
 // ═══════════════════
@@ -796,8 +853,10 @@ function priceDisp(pn){
 function fmtAmt(a){return a===0?'-':fmtN(a)+'원';}
 function fmtN(n){return Math.round(n).toLocaleString('ko-KR');}
 function fmtK(n){
+  if(n>=100000000) return (n/100000000).toFixed(1)+'억';
   if(n>=10000000) return (n/10000000).toFixed(1)+'천만';
-  if(n>=10000) return Math.round(n/10000)+'만';
+  if(n>=1000000) return (n/1000000).toFixed(1)+'백만';
+  if(n>=10000) return (n/10000).toFixed(1)+'만';
   return fmtN(n);
 }
 function getRecords(){return JSON.parse(localStorage.getItem('records')||'[]');}
