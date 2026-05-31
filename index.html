@@ -405,13 +405,13 @@ let selectedDay = null;
         div.innerHTML=buildRowHTML(id,rows.length);
         c.appendChild(div);
       });
-      const fill=Math.max(0,5-rows.length);
+      const fill=Math.max(0,3-rows.length);
       for(let i=0;i<fill;i++) addRow();
       updateTotal();
       toast('📂 '+dateStr+' 불러옴');
     }
   });
-  for(let i=0;i<10;i++) addRow();
+  for(let i=0;i<3;i++) addRow();
   renderPriceList();
   renderCalendar();
   setupInstall();
@@ -516,7 +516,7 @@ function resetRows(){
   if(!confirm('모든 입력을 초기화할까요?')) return;
   rows=[]; rowId=0;
   document.getElementById('rowsContainer').innerHTML='';
-  for(let i=0;i<10;i++) addRow();
+  for(let i=0;i<3;i++) addRow();
   updateTotal();
   toast('초기화되었습니다');
 }
@@ -680,8 +680,19 @@ function renderCalendar(){
       +(isSel?' selected':'');
     el.innerHTML=`<div class="cal-day">${d}</div>`
       +(info?`<div class="cal-amt">${fmtK(info.total)}</div><div class="cal-items">${info.items}품목</div><div class="cal-dot"></div>`:'');
-    el.onclick=()=>selectDay(dateStr, info);
-    el.ondblclick=()=>loadDateToCalc(dateStr);
+    let clickTimer=null;
+    el.addEventListener('click',()=>{
+      if(clickTimer) return; // 더블클릭 중이면 싱글클릭 무시
+      clickTimer=setTimeout(()=>{
+        clickTimer=null;
+        selectDay(dateStr, info);
+      }, 250);
+    });
+    el.addEventListener('dblclick',()=>{
+      clearTimeout(clickTimer);
+      clickTimer=null;
+      loadDateToCalc(dateStr);
+    });
     grid.appendChild(el);
   }
 }
@@ -766,12 +777,11 @@ function loadDateToCalc(dateStr){
       div.innerHTML=buildRowHTML(id,rows.length);
       c.appendChild(div);
     });
-    const fill=Math.max(0,5-rows.length);
-    for(let i=0;i<fill;i++) addRow();
+    for(let i=0;i<3;i++) addRow();
     toast('📂 '+dateStr+' 불러옴');
   } else {
-    // 저장 없음 → 빈 10줄로 초기화
-    for(let i=0;i<10;i++) addRow();
+    // 저장 없음 → 빈 3줄로 시작
+    for(let i=0;i<3;i++) addRow();
     toast('📝 '+dateStr+' 새로 작성');
   }
 
