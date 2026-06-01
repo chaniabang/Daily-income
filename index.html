@@ -296,7 +296,8 @@ input[type=number]{-moz-appearance:textfield}
   <div class="bot-bar">
     <button class="btn-main btn-load" onclick="openLoadModal()">📂 불러오기</button>
     <button class="btn-main btn-save" onclick="saveData()">💾 저장</button>
-    <button class="btn-main btn-reset" onclick="resetRows()">🗑</button>
+    <button class="btn-main btn-del-date" onclick="deleteCurrentDate()" style="background:rgba(255,91,91,.12);border:1px solid rgba(255,91,91,.3);color:var(--danger);flex:.6">🗑 삭제</button>
+    <button class="btn-main btn-reset" onclick="resetRows()" style="flex:.5">↺</button>
   </div>
 </div>
 
@@ -537,7 +538,6 @@ function saveData(){
   if(!date){alert('날짜를 선택해주세요.');return;}
   const data = rows.filter(r=>r.prodNum&&r.qty&&Number(r.qty)>0)
                    .map(r=>({prodNum:r.prodNum,qty:r.qty}));
-  if(!data.length){toast('저장할 데이터가 없습니다');return;}
 
   const saved = getRecords();
   const idx = saved.findIndex(s=>s.date===date);
@@ -548,6 +548,18 @@ function saveData(){
   } else { saved.unshift(rec); }
   setRecords(saved);
   toast('✅ '+date+' 저장 완료!');
+}
+
+function deleteCurrentDate(){
+  const date = document.getElementById('workDate').value;
+  if(!date){toast('날짜를 선택해주세요.');return;}
+  const saved = getRecords();
+  const idx = saved.findIndex(s=>s.date===date);
+  if(idx<0){toast('저장된 기록이 없습니다.');return;}
+  if(!confirm(`${date} 기록을 삭제할까요?`)) return;
+  saved.splice(idx,1);
+  setRecords(saved);
+  toast('🗑 '+date+' 기록 삭제됨');
 }
 
 function openLoadModal(){
